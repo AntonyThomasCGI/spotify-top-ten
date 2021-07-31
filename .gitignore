@@ -1,0 +1,6 @@
+# Build output here.
+dist/
+
+# Dumb mac.
+.DS_Store
+.history
