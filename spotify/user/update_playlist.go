@@ -1,12 +1,17 @@
 package user
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"time"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 type Song struct {
@@ -40,6 +45,14 @@ func UpdatePlaylist(auth *[]string) error {
 		return replaceErr
 	}
 
+	now := time.Now()
+	description := fmt.Sprintf("--- last updated: %s --- beep boop im a bot.", now.Format("02/01 03:04pm"))
+
+	descriptionErr := updateDescription(playlistId, description, auth)
+	if descriptionErr != nil {
+		logger.Error(descriptionErr)
+	}
+
 	return nil
 }
 
@@ -56,6 +69,47 @@ func replacePlaylistSongs(playlistId string, songs []*Song, auth *[]string) erro
 		strings.Join(uris, ","),
 	)
 	request, reqErr := http.NewRequest("PUT", replaceEndpoint, nil)
+	if reqErr != nil {
+		return reqErr
+	}
+	request.Header = http.Header{
+		"Accept":        []string{"application/json"},
+		"Authorization": *auth,
+	}
+
+	response, respErr := client.Do(request)
+	if respErr != nil {
+		return respErr
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode > 299 { // 201 considered success.
+		body, readErr := ioutil.ReadAll(response.Body)
+		if readErr != nil {
+			errNoBody := fmt.Errorf("Non-OK HTTP status: %d", response.StatusCode)
+			return errNoBody
+		}
+		errF := fmt.Errorf("Non-OK HTTP status: %d Body: %s", response.StatusCode, string(body))
+		return errF
+	}
+
+	return nil
+}
+
+func updateDescription(playlistId string, description string, auth *[]string) error {
+	playlistEndpoint := fmt.Sprintf(
+		"https://api.spotify.com/v1/playlists/%s",
+		playlistId,
+	)
+
+	body, marshalErr := json.Marshal(map[string]string{
+		"description": description,
+	})
+	if marshalErr != nil {
+		return marshalErr
+	}
+
+	request, reqErr := http.NewRequest("PUT", playlistEndpoint, bytes.NewBuffer(body))
 	if reqErr != nil {
 		return reqErr
 	}
