@@ -96,6 +96,7 @@ func replacePlaylistSongs(playlistId string, songs []*Song, auth *[]string) erro
 	return nil
 }
 
+// updateDescription updates the playlists description.
 func updateDescription(playlistId string, description string, auth *[]string) error {
 	playlistEndpoint := fmt.Sprintf(
 		"https://api.spotify.com/v1/playlists/%s",
