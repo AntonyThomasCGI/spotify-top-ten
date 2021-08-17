@@ -1,6 +1,6 @@
 # Spotify Top Ten
 
-Designed to be hooked up to a crontab or something so that a designated playlist is constantly updated with a your top 10 songs.
+Designed to be hooked up to a crontab or something so that a designated playlist is constantly updated with your top 10 songs.
 
 How to run:
 1. `git clone https://github.com/AntonyThomasCGI/spotify-top-ten.git`
